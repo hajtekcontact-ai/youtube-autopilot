@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}لوحة تحكم يوتيوب الآلية{% endblock %} | YouTube AI Autopilot</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  
+  <!-- Socket.IO Client -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-wrapper">
+          <div class="brand-icon">▶</div>
+          <div>
+            <div class="brand-title">يوتيوب أوتوبايلوت</div>
+            <div class="brand-subtitle">نظام الأتمتة الذكي v2.5</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">العمليات والإنتاج</div>
+        
+        <a href="{{ url_for('dashboard.overview') }}" class="nav-item {% if current_page == 'overview' %}active{% endif %}">
+          <span class="icon">📊</span>
+          <span>نظرة عامة</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.calendar') }}" class="nav-item {% if current_page == 'calendar' %}active{% endif %}">
+          <span class="icon">📅</span>
+          <span>تقويم النشر</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.videos') }}" class="nav-item {% if current_page == 'videos' %}active{% endif %}">
+          <span class="icon">🎬</span>
+          <span>مكتبة الفيديو</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.content') }}" class="nav-item {% if current_page == 'content' %}active{% endif %}">
+          <span class="icon">💡</span>
+          <span>مدير المحتوى</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.pipeline') }}" class="nav-item {% if current_page == 'pipeline' %}active{% endif %}">
+          <span class="icon">⚙️</span>
+          <span>خط إنتاج الفيديو</span>
+        </a>
+
+        <div class="nav-section-title">الأداء والنمو</div>
+
+        <a href="{{ url_for('dashboard.analytics') }}" class="nav-item {% if current_page == 'analytics' %}active{% endif %}">
+          <span class="icon">📈</span>
+          <span>تحليلات يوتيوب</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.revenue') }}" class="nav-item {% if current_page == 'revenue' %}active{% endif %}">
+          <span class="icon">💰</span>
+          <span>تقارير الإيرادات</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.experiments') }}" class="nav-item {% if current_page == 'experiments' %}active{% endif %}">
+          <span class="icon">🧪</span>
+          <span>التجارب والاستراتيجية</span>
+        </a>
+
+        <div class="nav-section-title">النظام والبنية التحتية</div>
+
+        <a href="{{ url_for('dashboard.errors') }}" class="nav-item {% if current_page == 'errors' %}active{% endif %}">
+          <span class="icon">⚠️</span>
+          <span>الأخطاء والمشاكل</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.resources') }}" class="nav-item {% if current_page == 'resources' %}active{% endif %}">
+          <span class="icon">☁️</span>
+          <span>موارد السحابة</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.quotas') }}" class="nav-item {% if current_page == 'quotas' %}active{% endif %}">
+          <span class="icon">⏱️</span>
+          <span>حصص API</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.settings') }}" class="nav-item {% if current_page == 'settings' %}active{% endif %}">
+          <span class="icon">🔧</span>
+          <span>الإعدادات</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.security') }}" class="nav-item {% if current_page == 'security' %}active{% endif %}">
+          <span class="icon">🛡️</span>
+          <span>الأمان والحسابات</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">{{ current_user.username[0]|upper if current_user.is_authenticated else 'A' }}</div>
+          <div class="user-info">
+            <div class="user-name">{{ current_user.username if current_user.is_authenticated else 'المسؤول' }}</div>
+            <div class="user-role">مدير النظام الآلي</div>
+          </div>
+        </div>
+        <a href="{{ url_for('dashboard.logout') }}" title="تسجيل الخروج" style="color: #94a3b8; font-size: 1.15rem;">🚪</a>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Top Navbar -->
+      <header class="top-navbar">
+        <div class="navbar-start">
+          <button class="hamburger-btn" id="hamburgerBtn" aria-label="تبديل القائمة">☰</button>
+          <h1 class="page-title">{% block header_title %}لوحة التحكم الرئيسية{% endblock %}</h1>
+        </div>
+
+        <div class="navbar-end">
+          <!-- Real-Time Connection Indicator -->
+          <div class="status-badge" id="connectionStatusBadge">
+            <span class="status-indicator-dot"></span>
+            <span>متصل بالنظام السحابي</span>
+          </div>
+
+          <!-- Emergency Stop Button -->
+          <button type="button" class="btn-emergency-stop" id="btnEmergencyStop" title="إيقاف اضطراري لجميع الأنشطة">
+            <span>🛑</span>
+            <span>إيقاف طوارئ</span>
+          </button>
+
+          <!-- Theme Toggle -->
+          <button type="button" class="btn-theme-toggle" id="themeToggleBtn" title="تبديل الوضع الليلي / الفاتح">
+            🌙
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Page Container -->
+      <main class="page-container">
+        <!-- Flash Alerts -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-container">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="alert-close" onclick="this.parentElement.remove()">✕</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- Child Page Body -->
+        {% block content %}{% endblock %}
+      </main>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <div>نظام أتمتة يوتيوب الذكي &copy; 2026 — مصمم للإنتاج الفائق بأحدث تقنيات الذكاء الاصطناعي.</div>
+        <div>الحالة التشغيلية: <span style="color: var(--color-success); font-weight: 700;">جاهز ومستقر</span></div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Core JavaScript -->
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

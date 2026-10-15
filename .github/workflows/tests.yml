@@ -1,0 +1,45 @@
+# YouTube AI Autopilot - CI Tests
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+
+      - name: Install Python deps
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v --tb=short --cov=src --cov-report=term-missing
+        env:
+          APP_ENV: test
+          DATABASE_URL: sqlite:///test_autopilot.db
+          TIMEZONE: America/New_York
+
+      - name: Lint check
+        run: |
+          pip install flake8
+          flake8 src/ --max-line-length=120 --ignore=E501,W503,E402 --count

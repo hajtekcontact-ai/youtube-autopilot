@@ -1,0 +1,57 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}موارد السحابة والعتاد{% endblock %}
+{% block header_title %}مراقبة استهلاك الخوادم وموارد السحابة{% endblock %}
+
+{% block content %}
+<!-- Total Cost Banner -->
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-body" style="padding: 18px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 4px;">تكلفة البنية التحتية السحابية المقدرة شهرياً</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">تشمل خوادم المعالجة، الحاويات، والتخزين المؤقت لملفات الوسائط.</p>
+      </div>
+      <div>
+        <span style="font-size: 1.8rem; font-weight: 900; color: var(--color-primary);">{{ total_monthly_cost|format_currency }}</span>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">/ شهر</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Resources Grid Cards -->
+<div class="stats-grid">
+  {% for res in resources %}
+    <div class="card" style="margin-bottom: 0; padding: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div>
+          <div style="font-weight: 800; font-size: 1rem; color: var(--text-primary);">{{ res.service_name }}</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">نوع المورد: {{ res.resource_type|upper }}</div>
+        </div>
+        <span class="badge {{ res.status|badge_class }}">{{ res.status|status_ar }}</span>
+      </div>
+
+      <div style="margin: 16px 0;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">
+          <span>نسبة الاستهلاك</span>
+          <span style="color: {% if res.usage_percent > 85 %}var(--color-danger){% elif res.usage_percent > 65 %}var(--color-warning){% else %}var(--color-success){% endif %};">
+            {{ res.usage_percent }}%
+          </span>
+        </div>
+        <div class="progress-container" style="margin: 0; height: 12px;">
+          <div 
+            class="progress-bar {% if res.usage_percent > 85 %}danger{% elif res.usage_percent > 65 %}warning{% else %}success{% endif %}" 
+            style="width: {{ res.usage_percent }}%;"
+          ></div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 12px;">
+        <span>التكلفة التقديرية:</span>
+        <strong style="color: var(--text-primary);">{{ res.cost_monthly_usd|format_currency }}/شهرياً</strong>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

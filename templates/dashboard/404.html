@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}الصفحة غير موجودة (404){% endblock %}
+{% block header_title %}خطأ: الصفحة غير موجودة{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center; padding: 60px 20px;">
+  <div style="font-size: 4rem; margin-bottom: 14px;">🔍</div>
+  <h2 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 12px; color: var(--text-primary);">
+    {{ error_title or 'عذراً، الصفحة المطلوبة غير موجودة (404)' }}
+  </h2>
+  <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 520px; margin: 0 auto 24px;">
+    يبدو أن الرابط الذي حاولت الوصول إليه قد تم نقله أو حذفه، أو أنك أدخلت عنواناً غير صحيح.
+  </p>
+  <div>
+    <a href="{{ url_for('dashboard.overview') }}" class="btn btn-primary" style="padding: 10px 24px;">
+      العودة للوحة التحكم الرئيسية 🏠
+    </a>
+  </div>
+</div>
+{% endblock %}

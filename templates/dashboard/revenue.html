@@ -1,0 +1,95 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}تقارير الإيرادات والأرباح{% endblock %}
+{% block header_title %}التقارير المالية والعائد الاستثماري (ROI){% endblock %}
+
+{% block content %}
+<!-- Financial Overview Cards -->
+<div class="stats-grid">
+  <!-- Net Profit -->
+  <div class="stat-card success">
+    <div class="stat-content">
+      <div class="stat-title">صافي الأرباح (Net Profit)</div>
+      <div class="stat-value" style="color: var(--color-success);">{{ total_net|format_currency }}</div>
+      <div class="stat-subtext">بعد خصم تكاليف الحوسبة ومحركات AI</div>
+    </div>
+    <div class="stat-icon">💵</div>
+  </div>
+
+  <!-- AdSense Revenue -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-title">إعلانات الفيديوهات الطويلة</div>
+      <div class="stat-value">{{ total_ad|format_currency }}</div>
+      <div class="stat-subtext">أرباح المشاهدات المعتادة</div>
+    </div>
+    <div class="stat-icon">📺</div>
+  </div>
+
+  <!-- Shorts Feed Revenue -->
+  <div class="stat-card info">
+    <div class="stat-content">
+      <div class="stat-title">صندوق خلاصة Shorts</div>
+      <div class="stat-value">{{ total_shorts|format_currency }}</div>
+      <div class="stat-subtext">عائد المقاطع العمودية القصيرة</div>
+    </div>
+    <div class="stat-icon">📱</div>
+  </div>
+
+  <!-- Cloud & API Costs -->
+  <div class="stat-card danger">
+    <div class="stat-content">
+      <div class="stat-title">تكاليف السحابة وAPI</div>
+      <div class="stat-value" style="color: var(--color-danger);">{{ total_costs|format_currency }}</div>
+      <div class="stat-subtext">الخوادم وتوليد المحتوى بالذكاء الاصطناعي</div>
+    </div>
+    <div class="stat-icon">📉</div>
+  </div>
+</div>
+
+<!-- Revenue Breakdown Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>💰</span>
+      <span>سجل الإيرادات والمصروفات اليومية</span>
+    </h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>عائد الإعلانات</th>
+            <th>عائد Shorts</th>
+            <th>الانتساب والدعم</th>
+            <th>تكلفة الخدمات (API)</th>
+            <th>صافي الربح اليومي</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+            <tr>
+              <td style="font-weight: 800;">{{ r.date }}</td>
+              <td>{{ r.ad_revenue|format_currency }}</td>
+              <td>{{ r.shorts_feed_revenue|format_currency }}</td>
+              <td>{{ r.memberships_revenue|format_currency }}</td>
+              <td style="color: var(--color-danger);">{{ r.api_costs|format_currency }}</td>
+              <td style="font-weight: 800; color: var(--color-success);">
+                {{ r.net_profit|format_currency }}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                لا توجد سجلات مالية متوفرة حالياً.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

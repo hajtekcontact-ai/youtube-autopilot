@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}خطأ غير متوقع في الخادم (500){% endblock %}
+{% block header_title %}خطأ في الخادم الداخلي{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center; padding: 60px 20px;">
+  <div style="font-size: 4rem; margin-bottom: 14px;">⚠️</div>
+  <h2 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 12px; color: var(--color-danger);">
+    حدث خطأ غير متوقع في الخادم الداخلي (500)
+  </h2>
+  <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 520px; margin: 0 auto 24px;">
+    واجه النظام استثناءً غير متوقع أثناء معالجة طلبك. تم تسجيل تفاصيل المشكلة تلقائياً في سجل الأخطاء للمتابعة.
+  </p>
+  <div style="display: flex; justify-content: center; gap: 12px;">
+    <a href="{{ url_for('dashboard.overview') }}" class="btn btn-primary" style="padding: 10px 24px;">
+      العودة للرئيسية 🏠
+    </a>
+    <a href="{{ url_for('dashboard.errors') }}" class="btn btn-secondary" style="padding: 10px 24px;">
+      سجل الأخطاء ⚠️
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}سجل الأخطاء والمشاكل{% endblock %}
+{% block header_title %}مركز رصد الأخطاء ومعالجة المشاكل التشغيلية{% endblock %}
+
+{% block content %}
+<!-- Filtering & Actions Bar -->
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-body" style="padding: 18px 24px;">
+    <form method="GET" action="{{ url_for('dashboard.errors') }}" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+      
+      <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+        <!-- Severity Filter -->
+        <div style="min-width: 170px;">
+          <select name="severity" class="form-select" onchange="this.form.submit()">
+            <option value="all" {% if selected_severity == 'all' %}selected{% endif %}>كافة مستويات الخطورة</option>
+            <option value="critical" {% if selected_severity == 'critical' %}selected{% endif %}>حرجة للغاية (Critical)</option>
+            <option value="error" {% if selected_severity == 'error' %}selected{% endif %}>أخطاء تشغيلية (Error)</option>
+            <option value="warning" {% if selected_severity == 'warning' %}selected{% endif %}>تحذيرات (Warning)</option>
+          </select>
+        </div>
+
+        <!-- Module Filter -->
+        <div style="min-width: 180px;">
+          <select name="module" class="form-select" onchange="this.form.submit()">
+            <option value="all" {% if selected_module == 'all' %}selected{% endif %}>جميع الوحدات والمحركات</option>
+            <option value="youtube_api" {% if selected_module == 'youtube_api' %}selected{% endif %}>YouTube API</option>
+            <option value="tts_engine" {% if selected_module == 'tts_engine' %}selected{% endif %}>محرك الصوت (TTS)</option>
+            <option value="video_renderer" {% if selected_module == 'video_renderer' %}selected{% endif %}>مُصيّر الفيديو</option>
+            <option value="gemini_ai" {% if selected_module == 'gemini_ai' %}selected{% endif %}>توليد الذكاء الاصطناعي</option>
+            <option value="scheduler" {% if selected_module == 'scheduler' %}selected{% endif %}>المجدول الزمني</option>
+          </select>
+        </div>
+
+        <!-- Unresolved Only Checkbox -->
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer;">
+          <input 
+            type="checkbox" 
+            name="unresolved" 
+            value="1" 
+            {% if unresolved_only %}checked{% endif %} 
+            onchange="this.form.submit()"
+          >
+          <span>عرض المشاكل غير المحلولة فقط</span>
+        </label>
+      </div>
+
+      <div>
+        {% if selected_severity != 'all' or selected_module != 'all' or unresolved_only %}
+          <a href="{{ url_for('dashboard.errors') }}" class="btn btn-secondary btn-sm">إعادة ضبط التصفية</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Errors Summary List -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>⚠️</span>
+      <span>قائمة السجلات المشخصة ({{ errors|length }} سجل)</span>
+    </h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>المستوى</th>
+            <th>الوحدة المعنية</th>
+            <th>وصف المشكلة</th>
+            <th>مرات المحاولة</th>
+            <th>وقت الحدوث</th>
+            <th>الحالة</th>
+            <th>الإجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for err in errors %}
+            <tr>
+              <td>
+                <span class="badge {{ err.severity|badge_class }}">
+                  {% if err.severity == 'critical' %}🔴 حرج جداً
+                  {% elif err.severity == 'error' %}🟠 خطأ
+                  {% else %}🟡 تحذير{% endif %}
+                </span>
+              </td>
+              <td style="font-weight: 700; font-family: monospace; direction: ltr; text-align: right;">{{ err.module }}</td>
+              <td>
+                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">{{ err.message }}</div>
+                {% if err.details %}
+                  <details style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer;">
+                    <summary style="outline: none; color: var(--color-primary);">عرض تتبع الخطأ (Stack Trace)</summary>
+                    <pre style="background: var(--bg-surface-hover); padding: 10px; border-radius: var(--radius-sm); margin-top: 6px; white-space: pre-wrap; font-family: monospace; direction: ltr; text-align: left;">{{ err.details }}</pre>
+                  </details>
+                {% endif %}
+              </td>
+              <td style="text-align: center; font-weight: 700;">{{ err.retry_count }}</td>
+              <td style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">{{ err.timestamp|arabic_date }}</td>
+              <td>
+                {% if err.resolved %}
+                  <span class="badge badge-success">تم الحل</span>
+                {% else %}
+                  <span class="badge badge-danger">قيد المتابعة</span>
+                {% endif %}
+              </td>
+              <td style="white-space: nowrap;">
+                <form method="POST" action="{{ url_for('dashboard.errors') }}" style="display: inline-block;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="error_id" value="{{ err.id }}">
+                  <button type="submit" class="btn btn-sm btn-primary">
+                    <span>🔄</span> إعادة التنفيذ
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--color-success); padding: 50px; font-weight: 700;">
+                🎉 ممتاز! لا توجد أية أخطاء أو مشاكل مسجلة مطابقة للمعايير المختارة.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

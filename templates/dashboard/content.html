@@ -1,0 +1,155 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}مدير المحتوى والذكاء الاصطناعي{% endblock %}
+{% block header_title %}مدير أفكار وسيناريوهات الذكاء الاصطناعي{% endblock %}
+
+{% block content %}
+<!-- Quick Add Idea Card -->
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>✨</span>
+      <span>إضافة فكرة أو مقترح سيناريو جديد</span>
+    </h2>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('dashboard.content') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="add_idea">
+
+      <div class="dashboard-grid-equal">
+        <div class="form-group">
+          <label for="title" class="form-label">عنوان الفيديو المقترح:</label>
+          <input 
+            type="text" 
+            id="title" 
+            name="title" 
+            class="form-control" 
+            required 
+            placeholder="مثال: ٥ تقنيات حاسوبية ستختفي في 2026"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="topic" class="form-label">الموضوع الرئيسي والكلمات الدلالية:</label>
+          <input 
+            type="text" 
+            id="topic" 
+            name="topic" 
+            class="form-control" 
+            required 
+            placeholder="مثال: الذكاء الاصطناعي، الحوسبة السحابية"
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="hook" class="form-label">الخطاف الافتتاحي (Hook - أول 3 ثوانٍ):</label>
+        <input 
+          type="text" 
+          id="hook" 
+          name="hook" 
+          class="form-control" 
+          placeholder="سؤال أو جملة صادمة تجذب انتباه المشاهد فوراً..."
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="outline" class="form-label">مخطط السيناريو والمحاور الأساسية:</label>
+        <textarea 
+          id="outline" 
+          name="outline" 
+          class="form-control" 
+          placeholder="أدخل هيكل النقاط: النقطة 1 -> النقطة 2 -> الخاتمة مع الدعوة للاشتراك (CTA)"
+        ></textarea>
+      </div>
+
+      <div style="text-align: left;">
+        <button type="submit" class="btn btn-primary">
+          <span>➕</span> حفظ الفكرة وبدء التجهيز
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Ideas & Scripts Pipeline -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>💡</span>
+      <span>بنك الأفكار ومقترحات الذكاء الاصطناعي ({{ ideas|length }})</span>
+    </h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>عنوان المحتوى</th>
+            <th>الموضوع</th>
+            <th>الخطاف الافتتاحي (Hook)</th>
+            <th>تقييم AI</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for idea in ideas %}
+            <tr>
+              <td>
+                <div style="font-weight: 800; color: var(--text-primary);">{{ idea.title }}</div>
+                {% if idea.script_outline %}
+                  <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+                    المسار: {{ idea.script_outline }}
+                  </div>
+                {% endif %}
+              </td>
+              <td>{{ idea.topic }}</td>
+              <td style="max-width: 260px; font-size: 0.85rem; color: var(--text-secondary);">
+                "{{ idea.hook }}"
+              </td>
+              <td>
+                <span class="badge badge-success" style="font-size: 0.85rem; font-weight: 800;">
+                  ⭐ {{ idea.ai_score }} / 10
+                </span>
+              </td>
+              <td>
+                <span class="badge {{ idea.status|badge_class }}">{{ idea.status|status_ar }}</span>
+              </td>
+              <td>
+                <form method="POST" action="{{ url_for('dashboard.content') }}" style="display: flex; gap: 6px;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="action" value="update_status">
+                  <input type="hidden" name="idea_id" value="{{ idea.id }}">
+
+                  {% if idea.status == 'idea' %}
+                    <button type="submit" name="status" value="approved" class="btn btn-sm btn-success" title="موافقة للإنتاج">
+                      موافقة
+                    </button>
+                    <button type="submit" name="status" value="rejected" class="btn btn-sm btn-secondary" title="استبعاد الفكرة">
+                      استبعاد
+                    </button>
+                  {% elif idea.status == 'approved' %}
+                    <button type="submit" name="status" value="scripted" class="btn btn-sm btn-primary">
+                      بدء السيناريو
+                    </button>
+                  {% else %}
+                    <span style="font-size: 0.82rem; color: var(--text-muted);">جاهز للتصيير</span>
+                  {% endif %}
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                لا توجد أفكار مسجلة حالياً. استخدم النموذج بالأعلى لإضافة فكرة جديدة!
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

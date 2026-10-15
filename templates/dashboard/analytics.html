@@ -1,0 +1,123 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}تحليلات يوتيوب والأداء{% endblock %}
+{% block header_title %}تحليلات القناة ومؤشرات النمو{% endblock %}
+
+{% block content %}
+<!-- Analytics Summary Grid -->
+<div class="stats-grid">
+  <!-- Total Views -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-title">إجمالي المشاهدات</div>
+      <div class="stat-value">{{ (totals.total_views or 0)|arabic_number }}</div>
+      <div class="stat-subtext">تراكمي آخر دورة تحليلات</div>
+    </div>
+    <div class="stat-icon">👁️</div>
+  </div>
+
+  <!-- Subscribers Gained -->
+  <div class="stat-card success">
+    <div class="stat-content">
+      <div class="stat-title">المشتركون الجدد</div>
+      <div class="stat-value">+{{ (totals.total_subs or 0)|arabic_number }}</div>
+      <div class="stat-subtext">معدل تحويل المشاهدين لمشتركين</div>
+    </div>
+    <div class="stat-icon">👥</div>
+  </div>
+
+  <!-- Watch Time Hours -->
+  <div class="stat-card info">
+    <div class="stat-content">
+      <div class="stat-title">ساعات المشاهدة</div>
+      <div class="stat-value">{{ (totals.total_watch_time or 0.0)|round(1) }}</div>
+      <div class="stat-subtext">ساعة مشاهدة إجمالية</div>
+    </div>
+    <div class="stat-icon">⏱️</div>
+  </div>
+
+  <!-- Average CTR -->
+  <div class="stat-card warning">
+    <div class="stat-content">
+      <div class="stat-title">متوسط النقر للظهور (CTR)</div>
+      <div class="stat-value">{{ (totals.avg_ctr or 0.0)|round(1) }}%</div>
+      <div class="stat-subtext">مؤشر جاذبية الصور والعناوين</div>
+    </div>
+    <div class="stat-icon">🎯</div>
+  </div>
+</div>
+
+<!-- Daily Performance Chart -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>📊</span>
+      <span>تطور المشاهدات اليومية (Daily Views Velocity)</span>
+    </h2>
+  </div>
+  <div class="card-body">
+    <div class="css-chart-container">
+      <div class="css-bar-chart" style="height: 240px;">
+        {% for snap in snapshots %}
+          {% set height_pct = (snap.views / 32000 * 100)|round|int %}
+          {% if height_pct > 100 %}{% set height_pct = 100 %}{% endif %}
+          {% if height_pct < 15 %}{% set height_pct = 15 %}{% endif %}
+          <div class="bar-col">
+            <div class="bar-wrapper">
+              <div class="bar-tooltip">{{ snap.views|arabic_number }} مشاهدة</div>
+              <div class="bar-fill" data-height="{{ height_pct }}%" style="height: 0%;"></div>
+            </div>
+            <div class="bar-label">{{ snap.date[5:] }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Snapshot Detailed Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>📋</span>
+      <span>سجل البيانات التحليلية التفصيلية</span>
+    </h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>المشاهدات اليومية</th>
+            <th>المشتركون الجدد</th>
+            <th>ساعات المشاهدة</th>
+            <th>مرات الظهور (Impressions)</th>
+            <th>نسبة النقر للظهور (CTR)</th>
+            <th>العائد التقديري ($)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for snap in snapshots %}
+            <tr>
+              <td style="font-weight: 800;">{{ snap.date }}</td>
+              <td style="font-weight: 800; color: var(--color-primary);">{{ snap.views|arabic_number }}</td>
+              <td style="color: var(--color-success); font-weight: 700;">+{{ snap.subscribers_gained|arabic_number }}</td>
+              <td>{{ snap.watch_time_hours }} ساعة</td>
+              <td>{{ snap.impressions|arabic_number }}</td>
+              <td>{{ snap.ctr_percent }}%</td>
+              <td style="font-weight: 700; color: var(--color-success);">{{ snap.revenue_usd|format_currency }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                لا توجد بيانات تحليلية متوفرة حتى الآن.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

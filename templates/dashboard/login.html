@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول | لوحة تحكم يوتيوب الذكية</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">▶</div>
+    <h1 class="auth-title">تسجيل الدخول</h1>
+    <p class="auth-subtitle">نظام الأتمتة الكامل لإنتاج ونشر فيديوهات يوتيوب</p>
+
+    <!-- Error Display -->
+    {% if error %}
+      <div class="alert alert-danger" style="text-align: right;">
+        <span>{{ error }}</span>
+      </div>
+    {% endif %}
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }}" style="text-align: right;">
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('dashboard.login') }}" style="text-align: right;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label for="username" class="form-label">اسم المستخدم:</label>
+        <input 
+          type="text" 
+          id="username" 
+          name="username" 
+          class="form-control" 
+          required 
+          autofocus 
+          placeholder="أدخل اسم المستخدم (مثال: admin)"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">كلمة المرور:</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          class="form-control" 
+          required 
+          placeholder="أدخل كلمة المرور الخاصة بك"
+        >
+      </div>
+
+      <div style="margin-top: 26px;">
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem;">
+          دخول لوحة التحكم 🚀
+        </button>
+      </div>
+    </form>
+
+    <div style="margin-top: 24px; font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+      محمي ببروتوكول تشفير متقدم ومراقبة نشاط مستمرة
+    </div>
+  </div>
+
+  <script>
+    // Inherit theme from localStorage
+    const savedTheme = localStorage.getItem('yt_autopilot_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+</body>
+</html>

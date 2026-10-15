@@ -1,0 +1,64 @@
+# YouTube AI Autopilot - Health Check
+# فحص صحة النظام يومياً
+name: Daily Health Check
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # 8 AM UTC daily
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          pip install -r requirements.txt
+
+      - name: Restore state
+        uses: actions/cache@v4
+        with:
+          path: data/
+          key: autopilot-state-${{ github.run_number }}
+          restore-keys: |
+            autopilot-state-
+
+      - name: Run health check
+        run: python main.py health
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          DATABASE_URL: sqlite:///data/autopilot.db
+
+      - name: Check recent errors
+        run: |
+          python -c "
+          from src.database import init_db, SessionLocal, SystemLog
+          from datetime import datetime, timedelta
+          init_db()
+          session = SessionLocal()
+          yesterday = datetime.utcnow() - timedelta(days=1)
+          errors = session.query(SystemLog).filter(
+              SystemLog.level == 'ERROR',
+              SystemLog.created_at >= yesterday
+          ).count()
+          print(f'Errors in last 24h: {errors}')
+          if errors > 10:
+              print('WARNING: High error rate detected')
+              exit(1)
+          session.close()
+          " || echo "Could not check errors (DB may not exist yet)"

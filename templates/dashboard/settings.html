@@ -1,0 +1,276 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}إعدادات النظام{% endblock %}
+{% block header_title %}تهيئة وتخصيص إعدادات الأتمتة{% endblock %}
+
+{% block content %}
+<!-- Integration Services Status Cards -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 28px;">
+  <!-- YouTube API -->
+  <div class="card" style="padding: 18px 22px; margin-bottom: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-weight: 800;">بوابة YouTube Data API</span>
+      {% if integrations.youtube %}
+        <span class="badge badge-success">متصل ومفعل</span>
+      {% else %}
+        <span class="badge badge-warning">بحاجة لربط مفاتيح</span>
+      {% endif %}
+    </div>
+    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 8px;">
+      الرفع الآلي واسترجاع تحليلات القناة
+    </div>
+  </div>
+
+  <!-- Gemini AI -->
+  <div class="card" style="padding: 18px 22px; margin-bottom: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-weight: 800;">ذكاء Gemini AI</span>
+      {% if integrations.gemini %}
+        <span class="badge badge-success">جاهز للعمل</span>
+      {% else %}
+        <span class="badge badge-secondary">اختياري (غير معرّف)</span>
+      {% endif %}
+    </div>
+    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 8px;">
+      توليد النصوص البرمجية والعناوين الجاذبة
+    </div>
+  </div>
+
+  <!-- Edge TTS -->
+  <div class="card" style="padding: 18px 22px; margin-bottom: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-weight: 800;">محرك الصوت Edge TTS</span>
+      <span class="badge badge-success">مدمج ومجاني</span>
+    </div>
+    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 8px;">
+      تحويل النصوص لأصوات طبيعية فائقة الجودة
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="card" style="padding: 18px 22px; margin-bottom: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-weight: 800;">نظام الإشعارات الفورية</span>
+      {% if integrations.notifications %}
+        <span class="badge badge-success">مفعل</span>
+      {% else %}
+        <span class="badge badge-secondary">غير نشط</span>
+      {% endif %}
+    </div>
+    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 8px;">
+      تنبيهات البريد عند النشر أو الأخطاء
+    </div>
+  </div>
+</div>
+
+<!-- Main Settings Form -->
+<form method="POST" action="{{ url_for('dashboard.settings') }}" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <!-- 1. Content Settings -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">
+        <span>🎬</span>
+        <span>إعدادات المحتوى وتوليد الفيديو</span>
+      </h2>
+    </div>
+    <div class="card-body">
+      <div class="dashboard-grid-equal">
+        <div class="form-group">
+          <label for="channel_niche" class="form-label">مجال وتخصص القناة (Niche):</label>
+          <select id="channel_niche" name="channel_niche" class="form-select">
+            <option value="science_technology_education" {% if settings.channel_niche == 'science_technology_education' %}selected{% endif %}>العلوم والتقنية والتعليم (Science & Tech)</option>
+            <option value="programming_ai" {% if settings.channel_niche == 'programming_ai' %}selected{% endif %}>البرمجة والذكاء الاصطناعي</option>
+            <option value="business_productivity" {% if settings.channel_niche == 'business_productivity' %}selected{% endif %}>إدارة الأعمال والإنتاجية</option>
+            <option value="facts_history" {% if settings.channel_niche == 'facts_history' %}selected{% endif %}>حقائق ومعلومات تاريخية غريبة</option>
+          </select>
+          <div class="form-help">يحدد النمط والأسلوب والمصادر المستخدمة لإنشاء الأفكار.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="content_language" class="form-label">لغة المحتوى الافتراضية:</label>
+          <select id="content_language" name="content_language" class="form-select">
+            <option value="ar-SA" {% if settings.content_language == 'ar-SA' %}selected{% endif %}>العربية (السعودية - فصحى معاصرة)</option>
+            <option value="ar-EG" {% if settings.content_language == 'ar-EG' %}selected{% endif %}>العربية (مصر)</option>
+            <option value="en-US" {% if settings.content_language == 'en-US' %}selected{% endif %}>الإنجليزية (الولايات المتحدة)</option>
+          </select>
+          <div class="form-help">اللغة المستخدمة في النصوص الصوتية والترجمة التلقائية.</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid-equal">
+        <div class="form-group">
+          <label for="tts_voice" class="form-label">الصوت الاصطناعي للراوي (TTS Voice):</label>
+          <select id="tts_voice" name="tts_voice" class="form-select">
+            <option value="ar-SA-HamedNeural" {% if settings.tts_voice == 'ar-SA-HamedNeural' %}selected{% endif %}>حامد (صوت وثائقي هادئ ورزين - عربي)</option>
+            <option value="ar-SA-ZariyahNeural" {% if settings.tts_voice == 'ar-SA-ZariyahNeural' %}selected{% endif %}>زارية (صوت نسائي تقني وواضح - عربي)</option>
+            <option value="ar-EG-ShakirNeural" {% if settings.tts_voice == 'ar-EG-ShakirNeural' %}selected{% endif %}>شاكر (صوت تفاعلي سريع - عربي)</option>
+            <option value="en-US-GuyNeural" {% if settings.tts_voice == 'en-US-GuyNeural' %}selected{% endif %}>Guy (صوت احترافي - إنجليزي)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="gemini_model" class="form-label">نموذج الذكاء الاصطناعي لتوليد السيناريو:</label>
+          <select id="gemini_model" name="gemini_model" class="form-select">
+            <option value="gemini-1.5-flash" {% if settings.gemini_model == 'gemini-1.5-flash' %}selected{% endif %}>Gemini 1.5 Flash (سرعة فائقة وكفاءة قصوى)</option>
+            <option value="gemini-1.5-pro" {% if settings.gemini_model == 'gemini-1.5-pro' %}selected{% endif %}>Gemini 1.5 Pro (تحليل استراتيجي عميق)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Publishing Schedule Settings -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">
+        <span>📅</span>
+        <span>إعدادات الجدول الزمني والوتيرة</span>
+      </h2>
+    </div>
+    <div class="card-body">
+      <div class="dashboard-grid-3">
+        <div class="form-group">
+          <label for="shorts_per_day" class="form-label">عدد الفيديوهات القصيرة يومياً:</label>
+          <input 
+            type="number" 
+            id="shorts_per_day" 
+            name="shorts_per_day" 
+            class="form-control" 
+            min="1" 
+            max="12" 
+            value="{{ settings.shorts_per_day or 4 }}"
+          >
+          <div class="form-help">الموصى به لتحقيق أفضل انتشار خوارزمي: 3-5 يومياً.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="long_videos_per_day" class="form-label">عدد الفيديوهات الطويلة أسبوعياً:</label>
+          <input 
+            type="number" 
+            id="long_videos_per_day" 
+            name="long_videos_per_day" 
+            class="form-control" 
+            min="0" 
+            max="7" 
+            value="{{ settings.long_videos_per_day or 1 }}"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="publish_timezone" class="form-label">المنطقة الزمنية للنشر:</label>
+          <input 
+            type="text" 
+            id="publish_timezone" 
+            name="publish_timezone" 
+            class="form-control" 
+            value="{{ settings.publish_timezone or 'Asia/Riyadh' }}"
+          >
+          <div class="form-help">مثال: Asia/Riyadh أو Africa/Cairo.</div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer;">
+          <input 
+            type="checkbox" 
+            name="auto_publish_enabled" 
+            value="true" 
+            {% if settings.auto_publish_enabled == 'true' %}checked{% endif %}
+          >
+          <span>تفعيل النشر المباشر على يوتيوب فور اكتمال معالجة الفيديو تلقائياً</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. File Upload for API Credentials -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">
+        <span>🔑</span>
+        <span>بيانات الاعتماد والمفاتيح المشفرة</span>
+      </h2>
+    </div>
+    <div class="card-body">
+      <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 18px;">
+        لا يتم عرض المفاتيح الحساسة في واجهة المتصفح لحماية حساباتك وأمان النظام.
+      </p>
+
+      <div class="form-group">
+        <label for="credentials_file" class="form-label">رفع ملف اعتماد جديد (client_secrets.json أو تهيئة):</label>
+        <input type="file" id="credentials_file" name="credentials_file" class="form-control" accept=".json,.env">
+        <div class="form-help">يتم تشفير الملف فور رفعه وتخزينه في مسار آمن لا يمكن الوصول إليه من الخارج.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Notifications & System Limits -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">
+        <span>🔔</span>
+        <span>الإشعارات والحدود المالية</span>
+      </h2>
+    </div>
+    <div class="card-body">
+      <div class="dashboard-grid-equal">
+        <div class="form-group">
+          <label for="notification_email" class="form-label">البريد الإلكتروني للإشعارات الهامة:</label>
+          <input 
+            type="email" 
+            id="notification_email" 
+            name="notification_email" 
+            class="form-control" 
+            value="{{ settings.notification_email or '' }}" 
+            placeholder="admin@example.com"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="max_daily_api_cost_usd" class="form-label">الحد الأقصى اليومي لتكلفة API ($):</label>
+          <input 
+            type="number" 
+            step="0.01" 
+            id="max_daily_api_cost_usd" 
+            name="max_daily_api_cost_usd" 
+            class="form-control" 
+            value="{{ settings.max_daily_api_cost_usd or '5.00' }}"
+          >
+          <div class="form-help">إذا تجاوز الاستهلاك هذا المبلغ، سيتم تفعيل قاطع التكلفة تلقائياً.</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+        <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer;">
+          <input 
+            type="checkbox" 
+            name="notify_on_publish" 
+            value="true" 
+            {% if settings.notify_on_publish == 'true' %}checked{% endif %}
+          >
+          <span>إرسال إشعار فوري عند نشر أي فيديو بنجاح</span>
+        </label>
+
+        <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer;">
+          <input 
+            type="checkbox" 
+            name="notify_on_error" 
+            value="true" 
+            {% if settings.notify_on_error == 'true' %}checked{% endif %}
+          >
+          <span>إرسال تنبيه عاجل عند حدوث أي خطأ حرج في خط الإنتاج</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Button Bar -->
+  <div style="text-align: left; margin-bottom: 40px;">
+    <button type="submit" class="btn btn-primary" style="padding: 12px 28px; font-size: 1rem;">
+      <span>💾</span> حفظ كافة الإعدادات
+    </button>
+  </div>
+</form>
+{% endblock %}

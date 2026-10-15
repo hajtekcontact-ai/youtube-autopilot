@@ -1,0 +1,142 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}خط إنتاج الفيديو الآلي{% endblock %}
+{% block header_title %}خط إنتاج وتصيير الفيديو التلقائي (Pipeline){% endblock %}
+
+{% block content %}
+<!-- Pipeline Overview & System Stage Flow -->
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>⚙️</span>
+      <span>مراحل الإنتاج الآلي للفيديو (Automated Video Assembly Stages)</span>
+    </h2>
+  </div>
+  <div class="card-body">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; text-align: center;">
+      
+      <div style="flex: 1; min-width: 130px; background: var(--bg-surface-hover); padding: 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 1.5rem; margin-bottom: 4px;">🧠</div>
+        <div style="font-weight: 800; font-size: 0.88rem;">1. كتابة السيناريو</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Gemini AI Engine</div>
+      </div>
+
+      <div style="color: var(--text-muted); font-weight: 900;">◀</div>
+
+      <div style="flex: 1; min-width: 130px; background: var(--bg-surface-hover); padding: 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 1.5rem; margin-bottom: 4px;">🎙️</div>
+        <div style="font-weight: 800; font-size: 0.88rem;">2. توليد الصوت</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Edge-TTS Neural</div>
+      </div>
+
+      <div style="color: var(--text-muted); font-weight: 900;">◀</div>
+
+      <div style="flex: 1; min-width: 130px; background: var(--bg-surface-hover); padding: 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 1.5rem; margin-bottom: 4px;">🎨</div>
+        <div style="font-weight: 800; font-size: 0.88rem;">3. المشاهد البصرية</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Compositor & PIL</div>
+      </div>
+
+      <div style="color: var(--text-muted); font-weight: 900;">◀</div>
+
+      <div style="flex: 1; min-width: 130px; background: var(--bg-surface-hover); padding: 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 1.5rem; margin-bottom: 4px;">🎬</div>
+        <div style="font-weight: 800; font-size: 0.88rem;">4. مونتاج وتجميع</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">FFmpeg Renderer</div>
+      </div>
+
+      <div style="color: var(--text-muted); font-weight: 900;">◀</div>
+
+      <div style="flex: 1; min-width: 130px; background: var(--bg-surface-hover); padding: 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 1.5rem; margin-bottom: 4px;">🚀</div>
+        <div style="font-weight: 800; font-size: 0.88rem;">5. الرفع والجدولة</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">YouTube Data API</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Active Jobs Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>🔄</span>
+      <span>المهام قيد التشغيل وقائمة الانتظار ({{ jobs|length }} مهمة)</span>
+    </h2>
+    <span class="badge badge-info">تحديث لحظي نشط</span>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>معرف المهمة</th>
+            <th>عنوان الفيديو</th>
+            <th>المرحلة الحالية</th>
+            <th>نسبة الإنجاز</th>
+            <th>الحالة</th>
+            <th>وقت البدء</th>
+            <th>التفاصيل</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+            <tr>
+              <td style="font-weight: 800; font-family: monospace; direction: ltr; text-align: right;">{{ job.job_id }}</td>
+              <td>
+                <div style="font-weight: 800; color: var(--text-primary); max-width: 320px;">{{ job.title }}</div>
+                {% if job.error_details %}
+                  <div style="font-size: 0.78rem; color: var(--color-danger); margin-top: 4px;">
+                    ⚠️ {{ job.error_details }}
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge badge-secondary" style="font-weight: 700;">
+                  {% if job.stage == 'visual_generation' %}المشاهد البصرية
+                  {% elif job.stage == 'video_assembly' %}تجميع وتصدير الفيديو
+                  {% elif job.stage == 'tts_audio' %}توليد التعليق الصوتي
+                  {% elif job.stage == 'upload' %}رفع الفيديو ليوتيوب
+                  {% elif job.stage == 'script_generation' %}صياغة السيناريو
+                  {% else %}{{ job.stage }}{% endif %}
+                </span>
+              </td>
+              <td style="min-width: 140px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="progress-container" style="flex: 1; margin: 0;">
+                    <div 
+                      class="progress-bar {% if job.status == 'failed' %}danger{% elif job.progress == 100 %}success{% endif %}" 
+                      style="width: {{ job.progress }}%;"
+                    ></div>
+                  </div>
+                  <span style="font-weight: 800; font-size: 0.82rem;">{{ job.progress }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge {{ job.status|badge_class }}">{{ job.status|status_ar }}</span>
+              </td>
+              <td style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">{{ job.started_at|arabic_date }}</td>
+              <td>
+                {% if job.status == 'failed' %}
+                  <a href="{{ url_for('dashboard.errors') }}" class="btn btn-sm btn-danger">فحص العطل</a>
+                {% elif job.status == 'completed' %}
+                  <span style="color: var(--color-success); font-weight: 700;">جاهز للنشر</span>
+                {% else %}
+                  <span style="color: var(--color-primary); font-weight: 700;">جارٍ المعالجة...</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                لا توجد مهام إنتاج نشطة حالياً.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

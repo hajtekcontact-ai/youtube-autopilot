@@ -1,0 +1,259 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}نظرة عامة على النظام{% endblock %}
+{% block header_title %}لوحة المتابعة التشغيلية العامة{% endblock %}
+
+{% block content %}
+<!-- Emergency Banner if Triggered -->
+{% if system_state.is_emergency_stopped %}
+<div class="alert alert-danger" style="padding: 20px; font-size: 1.05rem; border-width: 2px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+    <div>
+      <strong>⚠️ تنبيه طوارئ نشط:</strong> تم إيقاف جميع عمليات الإنتاج والنشر مؤقتاً عبر زر الطوارئ.
+    </div>
+    <button type="button" class="btn btn-sm btn-success" id="btnResumePublishing">استئناف النظام الآن</button>
+  </div>
+</div>
+{% endif %}
+
+<!-- Operational Controls Bar -->
+<div class="card" style="margin-bottom: 24px; padding: 16px 24px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-weight: 800; font-size: 1rem;">حالة النشر التلقائي:</span>
+      {% if system_state.is_paused %}
+        <span class="badge badge-warning" style="font-size: 0.9rem; padding: 6px 14px;">متوقف مؤقتاً</span>
+      {% else %}
+        <span class="badge badge-success" style="font-size: 0.9rem; padding: 6px 14px;">يعمل بشكل مستمر</span>
+      {% endif %}
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button 
+        type="button" 
+        class="btn btn-secondary btn-sm" 
+        id="btnPausePublishing" 
+        style="{% if system_state.is_paused %}display: none;{% endif %}"
+      >
+        <span>⏸️</span> إيقاف مؤقت للنشر
+      </button>
+
+      <button 
+        type="button" 
+        class="btn btn-success btn-sm" 
+        id="btnResumePublishing" 
+        style="{% if not system_state.is_paused %}display: none;{% endif %}"
+      >
+        <span>▶️</span> استئناف النشر التلقائي
+      </button>
+
+      <a href="{{ url_for('dashboard.pipeline') }}" class="btn btn-primary btn-sm">
+        <span>⚙️</span> خط الإنتاج المباشر
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Stats Cards (4 Key Counters) -->
+<div class="stats-grid">
+  <!-- Total Videos -->
+  <div class="stat-card">
+    <div class="stat-content">
+      <div class="stat-title">إجمالي الفيديوهات</div>
+      <div class="stat-value" id="statTotalVideos">{{ stats.total_videos|arabic_number }}</div>
+      <div class="stat-subtext">تم إنتاجها منذ بدء تشغيل المنظومة</div>
+    </div>
+    <div class="stat-icon">🎬</div>
+  </div>
+
+  <!-- Published Today -->
+  <div class="stat-card success">
+    <div class="stat-content">
+      <div class="stat-title">نُشرت اليوم</div>
+      <div class="stat-value" id="statPublishedToday">{{ stats.published_today|arabic_number }}</div>
+      <div class="stat-subtext">فيديوهات قصيرة وطويلة نُشرت بنجاح</div>
+    </div>
+    <div class="stat-icon">🚀</div>
+  </div>
+
+  <!-- Pending in Pipeline -->
+  <div class="stat-card warning">
+    <div class="stat-content">
+      <div class="stat-title">في الانتظار والتصيير</div>
+      <div class="stat-value" id="statPendingVideos">{{ stats.pending_videos|arabic_number }}</div>
+      <div class="stat-subtext">فيديوهات قيد الجدولة أو التجميع</div>
+    </div>
+    <div class="stat-icon">⏳</div>
+  </div>
+
+  <!-- Active Errors -->
+  <div class="stat-card danger">
+    <div class="stat-content">
+      <div class="stat-title">أخطاء غير محلولة</div>
+      <div class="stat-value" id="statActiveErrors">{{ stats.active_errors|arabic_number }}</div>
+      <div class="stat-subtext">تحتاج إلى مراجعة أو إعادة محاولة</div>
+    </div>
+    <div class="stat-icon">⚠️</div>
+  </div>
+</div>
+
+<!-- Secondary Metrics & System Health -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+  <!-- Weekly Output -->
+  <div class="card" style="padding: 18px 22px; margin-bottom: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span style="font-weight: 700; color: var(--text-secondary);">إنتاج الأسبوع الحالي</span>
+      <span style="font-weight: 900; font-size: 1.3rem; color: var(--color-primary);">{{ stats.produced_this_week|arabic_number }} فيديو</span>
+    </div>
+    <div style="font-size: 0.8rem; color: var(--text-muted);">معدل إنجاز خطة المحتوى الأسبوعية</div>
+  </div>
+
+  <!-- Success Rate -->
+  <div class="card" style="padding: 18px 22px; margin-bottom: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span style="font-weight: 700; color: var(--text-secondary);">معدل نجاح المهام</span>
+      <span style="font-weight: 900; font-size: 1.3rem; color: var(--color-success);">{{ stats.success_rate }}%</span>
+    </div>
+    <div class="progress-container" style="margin: 6px 0;">
+      <div class="progress-bar success" style="width: {{ stats.success_rate }}%;"></div>
+    </div>
+  </div>
+
+  <!-- Quota Meter -->
+  <div class="card" style="padding: 18px 22px; margin-bottom: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span style="font-weight: 700; color: var(--text-secondary);">استهلاك حصة YouTube API</span>
+      <span style="font-weight: 800; font-size: 0.95rem;">{{ stats.quota_used|arabic_number }} / {{ stats.quota_total|arabic_number }}</span>
+    </div>
+    <div class="progress-container" style="margin: 6px 0;">
+      <div class="progress-bar {% if stats.quota_percent > 85 %}danger{% elif stats.quota_percent > 65 %}warning{% endif %}" style="width: {{ stats.quota_percent }}%;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted);">
+      <span>المتبقي: {{ (stats.quota_total - stats.quota_used)|arabic_number }} وحدة</span>
+      <span>{{ stats.quota_percent }}%</span>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 24px;"></div>
+
+<!-- Main Content Grid: 7-Day Performance & Schedule -->
+<div class="dashboard-grid-2">
+  <!-- Left Side: 7-Day Chart -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">
+        <span>📈</span>
+        <span>أداء المشاهدات في آخر ٧ أيام</span>
+      </h2>
+      <a href="{{ url_for('dashboard.analytics') }}" class="btn btn-sm btn-secondary">التحليلات التفصيلية</a>
+    </div>
+    <div class="card-body">
+      <div class="css-chart-container">
+        <div class="css-bar-chart">
+          {% for snap in weekly_analytics %}
+            {% set height_pct = (snap.views / 30000 * 100)|round|int %}
+            {% if height_pct > 100 %}{% set height_pct = 100 %}{% endif %}
+            {% if height_pct < 15 %}{% set height_pct = 15 %}{% endif %}
+            <div class="bar-col">
+              <div class="bar-wrapper">
+                <div class="bar-tooltip">{{ snap.views|arabic_number }} مشاهدة</div>
+                <div class="bar-fill" data-height="{{ height_pct }}%" style="height: 0%;"></div>
+              </div>
+              <div class="bar-label">{{ snap.date[5:] }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 14px; font-size: 0.85rem; color: var(--text-muted);">
+        <span>📊 متوسط النمو اليومي: <strong style="color: var(--color-success);">+14.8%</strong></span>
+        <span>🎯 معدل النقر التراكمي (CTR): <strong style="color: var(--text-primary);">8.6%</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Today's Publishing Schedule -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">
+        <span>📅</span>
+        <span>جدول نشر اليوم</span>
+      </h2>
+      <a href="{{ url_for('dashboard.calendar') }}" class="btn btn-sm btn-secondary">التقويم الكامل</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>الوقت</th>
+              <th>الموضوع</th>
+              <th>النوع</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in schedule %}
+              <tr>
+                <td style="font-weight: 700; color: var(--color-primary); direction: ltr; text-align: right;">{{ item.slot_time }}</td>
+                <td>
+                  <div style="font-weight: 700; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ item.topic }}">
+                    {{ item.video_title or item.topic }}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-secondary">{{ 'شورتس' if item.content_type == 'short' else 'فيديو كامل' }}</span>
+                </td>
+                <td>
+                  <span class="badge {{ item.status|badge_class }}">{{ item.status|status_ar }}</span>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                  لا توجد مهام مجدولة لليوم.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activity Log Section -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>⚡</span>
+      <span>سجل النشاط والأحداث الأخيرة</span>
+    </h2>
+    <a href="{{ url_for('dashboard.security') }}" class="btn btn-sm btn-secondary">سجل الأمان الكامل</a>
+  </div>
+  <div class="card-body">
+    <ul class="activity-list">
+      {% for act in activity %}
+        <li class="activity-item">
+          <div class="activity-icon-bullet">
+            {% if 'login' in act.event_type %}🔑
+            {% elif 'stop' in act.event_type %}🛑
+            {% elif 'pause' in act.event_type %}⏸️
+            {% elif 'resume' in act.event_type %}▶️
+            {% elif 'upload' in act.event_type %}📤
+            {% else %}📌{% endif %}
+          </div>
+          <div class="activity-content">
+            <div class="activity-text">{{ act.details }}</div>
+            <div class="activity-time">{{ act.timestamp|arabic_date }} &bull; عنوان IP: {{ act.ip_address }}</div>
+          </div>
+        </li>
+      {% else %}
+        <li style="text-align: center; color: var(--text-muted); padding: 20px;">
+          لا توجد سجلات نشاط مسجلة حديثاً.
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

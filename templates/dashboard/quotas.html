@@ -1,0 +1,47 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}حصص واستهلاك API{% endblock %}
+{% block header_title %}متابعة حدود وحصص واجهات البرمجة (API Quotas){% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-body" style="padding: 18px 24px;">
+    <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 4px;">إدارة وتتبع استهلاك الحصص اليومية والشهرية</h3>
+    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
+      يتم تحديث هذه المؤشرات تلقائياً مع كل عملية رفع أو توليد نصوص بالذكاء الاصطناعي لمنع تجاوز الحدود المجانية أو المعتمدة.
+    </p>
+  </div>
+</div>
+
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+  {% for q in quotas %}
+    {% set pct = ((q.used_units / q.total_limit) * 100)|round(1) if q.total_limit > 0 else 0 %}
+    <div class="card" style="padding: 22px; margin-bottom: 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="font-weight: 800; font-size: 1.05rem;">{{ q.service_name }}</span>
+        <span class="badge {% if pct > 85 %}badge-danger{% elif pct > 65 %}badge-warning{% else %}badge-success{% endif %}">
+          {{ pct }}%
+        </span>
+      </div>
+
+      <div style="margin: 16px 0;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">
+          <span>المستهلك: {{ q.used_units|arabic_number }} {{ q.unit_name }}</span>
+          <span>الحد: {{ q.total_limit|arabic_number }}</span>
+        </div>
+        <div class="progress-container" style="margin: 0; height: 12px;">
+          <div 
+            class="progress-bar {% if pct > 85 %}danger{% elif pct > 65 %}warning{% else %}success{% endif %}" 
+            style="width: {{ pct }}%;"
+          ></div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px;">
+        <span>موعد إعادة التعيين (Reset):</span>
+        <strong style="color: var(--text-primary);">{{ q.reset_time }}</strong>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

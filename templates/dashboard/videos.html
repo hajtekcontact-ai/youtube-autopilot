@@ -1,0 +1,277 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}مكتبة الفيديو{% endblock %}
+{% block header_title %}مكتبة الفيديوهات والإنتاج{% endblock %}
+
+{% block content %}
+<!-- Search & Filters Toolbar -->
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-body" style="padding: 18px 24px;">
+    <form method="GET" action="{{ url_for('dashboard.videos') }}" style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+      
+      <!-- Search Input -->
+      <div style="flex: 1; min-width: 250px;">
+        <input 
+          type="text" 
+          name="search" 
+          value="{{ search_query }}" 
+          class="form-control" 
+          placeholder="ابحث بعنوان الفيديو أو الكلمات المفتاحية..."
+        >
+      </div>
+
+      <!-- Status Filter -->
+      <div style="width: 200px;">
+        <select name="status" class="form-select" onchange="this.form.submit()">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>جميع الحالات</option>
+          <option value="published" {% if status_filter == 'published' %}selected{% endif %}>تم النشر</option>
+          <option value="scheduled" {% if status_filter == 'scheduled' %}selected{% endif %}>مجدول للنشر</option>
+          <option value="uploaded" {% if status_filter == 'uploaded' %}selected{% endif %}>تم الرفع</option>
+          <option value="produced" {% if status_filter == 'produced' %}selected{% endif %}>تم الإنتاج</option>
+          <option value="producing" {% if status_filter == 'producing' %}selected{% endif %}>قيد الإنتاج</option>
+          <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>فشل</option>
+        </select>
+      </div>
+
+      <!-- Action Buttons & View Toggle -->
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button type="submit" class="btn btn-primary">بحث وتصفية</button>
+        {% if search_query or status_filter != 'all' %}
+          <a href="{{ url_for('dashboard.videos') }}" class="btn btn-secondary" title="إلغاء التصفية">إعادة تعيين</a>
+        {% endif %}
+        
+        <input type="hidden" name="view" value="{{ view_mode }}">
+        <div style="display: flex; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden;">
+          <a 
+            href="{{ url_for('dashboard.videos', search=search_query, status=status_filter, view='grid') }}" 
+            class="btn btn-sm {% if view_mode == 'grid' %}btn-primary{% else %}btn-secondary{% endif %}"
+            style="border-radius: 0;"
+            title="عرض الشبكة"
+          >
+            ▦
+          </a>
+          <a 
+            href="{{ url_for('dashboard.videos', search=search_query, status=status_filter, view='list') }}" 
+            class="btn btn-sm {% if view_mode == 'list' %}btn-primary{% else %}btn-secondary{% endif %}"
+            style="border-radius: 0;"
+            title="عرض القائمة"
+          >
+            ☰
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Video Counter -->
+<div style="margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;">
+  <div style="font-weight: 700; color: var(--text-secondary);">
+    إجمالي النتائج: <strong style="color: var(--text-primary);">{{ total_count|arabic_number }}</strong> فيديو
+  </div>
+  <a href="{{ url_for('dashboard.content') }}" class="btn btn-success btn-sm">
+    <span>➕</span> توليد أفكار وفيديوهات جديدة
+  </a>
+</div>
+
+<!-- Videos Display Area -->
+{% if view_mode == 'list' %}
+  <!-- List Table View -->
+  <div class="card">
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>المعرف</th>
+              <th>عنوان الفيديو</th>
+              <th>النوع</th>
+              <th>المشاهدات</th>
+              <th>الإعجابات</th>
+              <th>الاحتفاظ</th>
+              <th>الحالة</th>
+              <th>تاريخ النشر</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for video in videos %}
+              <tr>
+                <td style="font-weight: 700; color: var(--text-muted);">{{ video.video_id or ('#' ~ video.id) }}</td>
+                <td>
+                  <div style="font-weight: 700; color: var(--text-primary); max-width: 300px;">{{ video.title }}</div>
+                </td>
+                <td>
+                  <span class="badge badge-secondary">{{ 'شورتس' if video.video_type == 'short' else 'طويل' }}</span>
+                </td>
+                <td style="font-weight: 700;">{{ video.views|arabic_number }}</td>
+                <td>{{ video.likes|arabic_number }}</td>
+                <td>{{ video.retention_rate }}%</td>
+                <td>
+                  <span class="badge {{ video.status|badge_class }}">{{ video.status|status_ar }}</span>
+                </td>
+                <td>{{ video.published_at|arabic_date if video.published_at else 'قيد الإعداد' }}</td>
+                <td>
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-secondary" 
+                    onclick="openVideoModal('{{ video.title|replace("'", "\\'") }}', '{{ video.description|replace("'", "\\'") }}', '{{ video.views }}', '{{ video.likes }}', '{{ video.comments }}', '{{ video.status|status_ar }}', '{{ video.error_message or '' }}')"
+                  >
+                    عرض التفاصيل
+                  </button>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                  لم يتم العثور على فيديوهات مطابقة لمعايير البحث.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <!-- Grid View -->
+  <div class="videos-grid">
+    {% for video in videos %}
+      <div class="video-card">
+        <div class="video-thumb-container">
+          <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: #64748b;">
+            {% if video.video_type == 'short' %}📱{% else %}🖥️{% endif %}
+          </div>
+          <span class="video-badge-type">{{ 'فيديو قصير (Shorts)' if video.video_type == 'short' else 'فيديو كامل' }}</span>
+          <span class="badge {{ video.status|badge_class }} video-badge-status">{{ video.status|status_ar }}</span>
+        </div>
+
+        <div class="video-details">
+          <h3 class="video-title" title="{{ video.title }}">{{ video.title }}</h3>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+            {{ video.description or 'لا يوجد وصف مخصص للفيديو حتى الآن.' }}
+          </p>
+
+          {% if video.error_message %}
+            <div style="font-size: 0.78rem; color: var(--color-danger); background-color: var(--color-danger-bg); padding: 6px 10px; border-radius: var(--radius-sm); margin-bottom: 10px;">
+              ⚠️ {{ video.error_message }}
+            </div>
+          {% endif %}
+
+          <div class="video-meta-row">
+            <div>
+              <span>👀 {{ video.views|arabic_number }}</span> &bull; 
+              <span>👍 {{ video.likes|arabic_number }}</span>
+            </div>
+            <button 
+              type="button" 
+              class="btn btn-sm btn-secondary" 
+              onclick="openVideoModal('{{ video.title|replace("'", "\\'") }}', '{{ video.description|replace("'", "\\'") }}', '{{ video.views }}', '{{ video.likes }}', '{{ video.comments }}', '{{ video.status|status_ar }}', '{{ video.error_message or '' }}')"
+            >
+              التفاصيل
+            </button>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="card" style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-muted);">
+        لم يتم العثور على أي مقاطع فيديو تطابق التصفية.
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- Pagination Controls -->
+{% if total_pages > 1 %}
+  <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 32px;">
+    {% if current_page_num > 1 %}
+      <a 
+        href="{{ url_for('dashboard.videos', page=current_page_num - 1, search=search_query, status=status_filter, view=view_mode) }}" 
+        class="btn btn-secondary btn-sm"
+      >
+        السابق
+      </a>
+    {% endif %}
+
+    {% for p in range(1, total_pages + 1) %}
+      <a 
+        href="{{ url_for('dashboard.videos', page=p, search=search_query, status=status_filter, view=view_mode) }}" 
+        class="btn btn-sm {% if p == current_page_num %}btn-primary{% else %}btn-secondary{% endif %}"
+      >
+        {{ p }}
+      </a>
+    {% endfor %}
+
+    {% if current_page_num < total_pages %}
+      <a 
+        href="{{ url_for('dashboard.videos', page=current_page_num + 1, search=search_query, status=status_filter, view=view_mode) }}" 
+        class="btn btn-secondary btn-sm"
+      >
+        التالي
+      </a>
+    {% endif %}
+  </div>
+{% endif %}
+
+<!-- Video Details Modal -->
+<div class="modal-overlay" id="videoDetailsModal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalVideoTitle">تفاصيل الفيديو</h3>
+      <button type="button" class="alert-close" onclick="closeVideoModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">الحالة التشغيلية:</label>
+        <div id="modalVideoStatus" style="font-weight: 700;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الوصف والملخص:</label>
+        <div id="modalVideoDesc" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary); background: var(--bg-surface-hover); padding: 12px; border-radius: var(--radius-sm);"></div>
+      </div>
+      <div class="dashboard-grid-equal" style="margin-top: 14px;">
+        <div style="background: var(--bg-surface-hover); padding: 10px; border-radius: var(--radius-sm); text-align: center;">
+          <div style="font-size: 0.8rem; color: var(--text-muted);">المشاهدات</div>
+          <div id="modalVideoViews" style="font-size: 1.2rem; font-weight: 800;">0</div>
+        </div>
+        <div style="background: var(--bg-surface-hover); padding: 10px; border-radius: var(--radius-sm); text-align: center;">
+          <div style="font-size: 0.8rem; color: var(--text-muted);">الإعجابات والتعليقات</div>
+          <div id="modalVideoLikes" style="font-size: 1.2rem; font-weight: 800;">0</div>
+        </div>
+      </div>
+      <div id="modalVideoErrorWrap" style="margin-top: 14px; display: none;">
+        <div class="alert alert-danger" id="modalVideoErrorText"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeVideoModal()">إغلاق</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function openVideoModal(title, desc, views, likes, comments, status, errorMsg) {
+    document.getElementById('modalVideoTitle').innerText = title;
+    document.getElementById('modalVideoDesc').innerText = desc || 'لا يوجد وصف مسجل';
+    document.getElementById('modalVideoViews').innerText = Number(views).toLocaleString('ar-EG');
+    document.getElementById('modalVideoLikes').innerText = Number(likes).toLocaleString('ar-EG') + ' / ' + Number(comments).toLocaleString('ar-EG');
+    document.getElementById('modalVideoStatus').innerText = status;
+    
+    const errWrap = document.getElementById('modalVideoErrorWrap');
+    if (errorMsg && errorMsg.trim()) {
+      errWrap.style.display = 'block';
+      document.getElementById('modalVideoErrorText').innerText = 'رسالة الخطأ: ' + errorMsg;
+    } else {
+      errWrap.style.display = 'none';
+    }
+
+    document.getElementById('videoDetailsModal').classList.add('active');
+  }
+
+  function closeVideoModal() {
+    document.getElementById('videoDetailsModal').classList.remove('active');
+  }
+</script>
+{% endblock %}

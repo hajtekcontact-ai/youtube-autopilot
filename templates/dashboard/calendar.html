@@ -1,0 +1,106 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}تقويم النشر وجدولة الفيديوهات{% endblock %}
+{% block header_title %}تقويم النشر التلقائي الأسبوعي{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-body" style="padding: 18px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 4px;">الجدول الزمني المبرمج</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
+          يتم نشر الفيديوهات تلقائياً وفقاً للتوقيت المحلي ({{ settings.publish_timezone or 'Asia/Riyadh' }}).
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <span class="badge badge-info" style="padding: 8px 14px; font-size: 0.88rem;">
+          {{ settings.shorts_per_day or 4 }} مقاطع قصيرة يومياً
+        </span>
+        <span class="badge badge-secondary" style="padding: 8px 14px; font-size: 0.88rem;">
+          {{ settings.long_videos_per_day or 1 }} مقطع طويل أسبوعياً
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Calendar Schedule Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>📅</span>
+      <span>المواعيد والفتحات الزمنية (Publishing Slots)</span>
+    </h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>اليوم</th>
+            <th>وقت النشر</th>
+            <th>نوع المحتوى</th>
+            <th>الموضوع المستهدف</th>
+            <th>الفيديو المرتبط</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for slot in schedule %}
+            <tr>
+              <td style="font-weight: 800; color: var(--text-primary);">{{ slot.day_of_week }}</td>
+              <td style="font-weight: 800; color: var(--color-primary); direction: ltr; text-align: right;">{{ slot.slot_time }}</td>
+              <td>
+                <span class="badge {% if slot.content_type == 'short' %}badge-info{% else %}badge-warning{% endif %}">
+                  {{ 'فيديو قصير (Shorts)' if slot.content_type == 'short' else 'فيديو طويل كامل' }}
+                </span>
+              </td>
+              <td style="font-weight: 700;">{{ slot.topic }}</td>
+              <td style="color: var(--text-secondary);">
+                {{ slot.video_title or 'قيد الإنتاج الآلي...' }}
+              </td>
+              <td>
+                <span class="badge {{ slot.status|badge_class }}">{{ slot.status|status_ar }}</span>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                لا توجد فتحات نشر مجدولة.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Best Publishing Times Guide Card -->
+<div class="card" style="margin-top: 24px;">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>💡</span>
+      <span>أوقات الذروة المقترحة من خوارزمية يوتيوب</span>
+    </h2>
+  </div>
+  <div class="card-body">
+    <div class="dashboard-grid-3">
+      <div style="background: var(--bg-surface-hover); padding: 16px; border-radius: var(--radius-md);">
+        <div style="font-weight: 800; margin-bottom: 4px;">الفترة الصباحية (11:00 - 13:00)</div>
+        <div style="font-size: 0.82rem; color: var(--text-secondary);">ممتازة للفيديوهات التعليمية السريعة والحقائق الرقمية.</div>
+      </div>
+      <div style="background: var(--bg-surface-hover); padding: 16px; border-radius: var(--radius-md);">
+        <div style="font-weight: 800; margin-bottom: 4px;">فترة الظهيرة (16:00 - 18:00)</div>
+        <div style="font-size: 0.82rem; color: var(--text-secondary);">أعلى معدل نقر للظهور لفيديوهات الشورتس الترفيهية والتطويرية.</div>
+      </div>
+      <div style="background: var(--bg-surface-hover); padding: 16px; border-radius: var(--radius-md);">
+        <div style="font-weight: 800; margin-bottom: 4px;">الفترة المسائية (20:00 - 23:00)</div>
+        <div style="font-size: 0.82rem; color: var(--text-secondary);">الوقت الذهبي لنشر الفيديوهات الطويلة والشروحات المتعمقة.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

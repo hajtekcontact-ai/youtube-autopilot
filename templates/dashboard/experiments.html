@@ -1,0 +1,76 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}التجارب والاستراتيجية{% endblock %}
+{% block header_title %}مختبر التجارب وتحسين الخوارزمية (A/B Testing){% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-body" style="padding: 18px 24px;">
+    <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 4px;">منهجية النمو القائمة على البيانات</h3>
+    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
+      يقوم النظام تلقائياً باختبار فرضيات مختلفة على الصور المصغرة، وسرعة المقدمة، وطريقة صياغة العناوين لاكتشاف أفضل الأنماط الجاذبة للجمهور.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>🧪</span>
+      <span>قائمة التجارب النشطة والمكتملة</span>
+    </h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>عنوان التجربة والفرضية</th>
+            <th>المتغير (أ) - Variant A</th>
+            <th>المتغير (ب) - Variant B</th>
+            <th>المقياس المستهدف</th>
+            <th>مستوى الثقة الإحصائية</th>
+            <th>الحالة</th>
+            <th>النتيجة الفائزة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for exp in experiments %}
+            <tr>
+              <td>
+                <div style="font-weight: 800; color: var(--text-primary);">{{ exp.title }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">{{ exp.hypothesis }}</div>
+              </td>
+              <td style="background: var(--bg-surface-hover); font-size: 0.85rem;">{{ exp.variant_a }}</td>
+              <td style="background: var(--bg-surface-hover); font-size: 0.85rem;">{{ exp.variant_b }}</td>
+              <td>
+                <span class="badge badge-info">{{ exp.metric|upper }}</span>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="progress-container" style="flex: 1; margin: 0; min-width: 70px;">
+                    <div class="progress-bar success" style="width: {{ exp.confidence }}%;"></div>
+                  </div>
+                  <span style="font-weight: 800; font-size: 0.82rem;">{{ exp.confidence }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge {{ exp.status|badge_class }}">{{ exp.status|status_ar }}</span>
+              </td>
+              <td style="font-weight: 800; color: var(--color-success);">
+                {{ exp.winner or 'جارٍ جمع البيانات...' }}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                لا توجد تجارب مسجلة حالياً.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

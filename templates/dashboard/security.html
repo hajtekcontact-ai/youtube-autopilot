@@ -1,0 +1,149 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}الأمان والحسابات{% endblock %}
+{% block header_title %}مركز الأمان وإدارة الحسابات وOAuth{% endblock %}
+
+{% block content %}
+<!-- YouTube OAuth Status Card -->
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>🔐</span>
+      <span>ربط قناة يوتيوب عبر بروتوكول Google OAuth 2.0</span>
+    </h2>
+  </div>
+  <div class="card-body">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 4px;">حالة التفويض السحابي لقناة يوتيوب</h4>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
+          يتيح التفويض للنظام رفع الفيديوهات تلقائياً، وتحديث الصور المصغرة، وقراءة تحليلات الأداء لحظياً.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="{{ url_for('dashboard.oauth_start') }}" class="btn btn-primary">
+          <span>🔄</span> ربط أو تجديد تفويض YouTube OAuth
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Password Change Card -->
+<div class="dashboard-grid-equal" style="margin-bottom: 24px;">
+  <!-- Password Form -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h2 class="card-title">
+        <span>🔑</span>
+        <span>تحديث كلمة مرور المسؤول</span>
+      </h2>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('dashboard.security') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="change_password">
+
+        <div class="form-group">
+          <label for="current_password" class="form-label">كلمة المرور الحالية:</label>
+          <input type="password" id="current_password" name="current_password" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label for="new_password" class="form-label">كلمة المرور الجديدة (8 أحرف على الأقل):</label>
+          <input type="password" id="new_password" name="new_password" class="form-control" required minlength="8">
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password" class="form-label">تأكيد كلمة المرور الجديدة:</label>
+          <input type="password" id="confirm_password" name="confirm_password" class="form-control" required minlength="8">
+        </div>
+
+        <div style="text-align: left; margin-top: 16px;">
+          <button type="submit" class="btn btn-primary">تحديث كلمة المرور</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Operational Kill Switches -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h2 class="card-title">
+        <span>🚨</span>
+        <span>قواطع الطوارئ والتحكم الصارم</span>
+      </h2>
+    </div>
+    <div class="card-body">
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
+        في الحالات الحرجة أو وجود أي خلل غير متوقع في محركات الذكاء الاصطناعي، يمكنك استخدام هذه الأزرار للتدخل الفوري.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: var(--bg-surface-hover); padding: 14px; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 800;">إيقاف طوارئ فوري شامل</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">تجميد كافة الحاويات ومحركات الإنتاج والرفع السحابي فوراً</div>
+          </div>
+          <button type="button" class="btn btn-sm btn-danger" onclick="document.getElementById('btnEmergencyStop').click()">
+            إيقاف طوارئ
+          </button>
+        </div>
+
+        <div style="background: var(--bg-surface-hover); padding: 14px; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 800;">قاطع تكلفة API التلقائي</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">إيقاف المهام في حال اقتراب التكلفة اليومية من السقف المحدد</div>
+          </div>
+          <span class="badge badge-success">مفعل افتراضياً</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Security Audit Log Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <span>🛡️</span>
+      <span>سجل تدقيق الأمان والوصول (Audit Trail)</span>
+    </h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>الحدث الأمني</th>
+            <th>عنوان IP</th>
+            <th>بيانات المتصفح / العميل</th>
+            <th>التفاصيل المسجلة</th>
+            <th>الوقت والتاريخ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in audit_logs %}
+            <tr>
+              <td style="font-weight: 800; font-family: monospace; direction: ltr; text-align: right;">{{ log.event_type }}</td>
+              <td style="direction: ltr; text-align: right; font-weight: 700;">{{ log.ip_address }}</td>
+              <td style="font-size: 0.8rem; color: var(--text-muted); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ log.user_agent }}">
+                {{ log.user_agent }}
+              </td>
+              <td style="font-weight: 600;">{{ log.details }}</td>
+              <td style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">{{ log.timestamp|arabic_date }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                لا توجد سجلات تدقيق أمني مسجلة.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

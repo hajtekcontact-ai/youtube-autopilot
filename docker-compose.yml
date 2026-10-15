@@ -1,0 +1,34 @@
+services:
+  autopilot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: youtube_autopilot_app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - APP_ENV=production
+      - TIMEZONE=America/New_York
+      - DATABASE_URL=sqlite:///data/autopilot.db
+      - YOUTUBE_CLIENT_ID=${YOUTUBE_CLIENT_ID}
+      - YOUTUBE_CLIENT_SECRET=${YOUTUBE_CLIENT_SECRET}
+      - YOUTUBE_REFRESH_TOKEN=${YOUTUBE_REFRESH_TOKEN}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
+      - DASHBOARD_SECRET_KEY=${DASHBOARD_SECRET_KEY}
+      - EMERGENCY_STOP=false
+      - COST_KILL_SWITCH=false
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - ./assets:/app/assets
+    healthcheck:
+      test: ["CMD", "python", "main.py", "health"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
