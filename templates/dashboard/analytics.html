@@ -57,6 +57,7 @@
   </div>
   <div class="card-body">
     <div class="css-chart-container">
+      {% if snapshots and snapshots|length > 0 %}
       <div class="css-bar-chart" style="height: 240px;">
         {% for snap in snapshots %}
           {% set height_pct = (snap.views / 32000 * 100)|round|int %}
@@ -71,6 +72,15 @@
           </div>
         {% endfor %}
       </div>
+      {% else %}
+      <div style="text-align: center; color: var(--text-muted); padding: 50px 20px;">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;">📈</div>
+        <div style="font-weight: 700; font-size: 1.05rem;">قيد انتظار تسجيل أول نشاط على قناة YouTube</div>
+        <div style="font-size: 0.85rem; margin-top: 6px; color: var(--text-secondary);">
+          يتم جلب هذه المقاييس رسمياً عبر YouTube Analytics API بعد تفعيل النشر المباشر.
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>

@@ -150,6 +150,7 @@
     </div>
     <div class="card-body">
       <div class="css-chart-container">
+        {% if weekly_analytics and weekly_analytics|length > 0 %}
         <div class="css-bar-chart">
           {% for snap in weekly_analytics %}
             {% set height_pct = (snap.views / 30000 * 100)|round|int %}
@@ -164,10 +165,17 @@
             </div>
           {% endfor %}
         </div>
-      </div>
-      <div style="display: flex; justify-content: space-between; margin-top: 14px; font-size: 0.85rem; color: var(--text-muted);">
-        <span>📊 متوسط النمو اليومي: <strong style="color: var(--color-success);">+14.8%</strong></span>
-        <span>🎯 معدل النقر التراكمي (CTR): <strong style="color: var(--text-primary);">8.6%</strong></span>
+        <div style="display: flex; justify-content: space-between; margin-top: 14px; font-size: 0.85rem; color: var(--text-muted);">
+          <span>📊 آخر تحديث: <strong style="color: var(--color-success);">مباشر</strong></span>
+          <span>🎯 مصدر البيانات: <strong style="color: var(--text-primary);">YouTube Analytics API</strong></span>
+        </div>
+        {% else %}
+        <div style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
+          <div style="font-size: 2rem; margin-bottom: 8px;">📊</div>
+          <div>لا توجد بيانات مشاهدات تراكمية حتى الآن</div>
+          <div style="font-size: 0.8rem; margin-top: 4px;">يتم التحديث المباشر فور تسجيل أول مشاهدات للفيديوهات على القناة</div>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
