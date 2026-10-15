@@ -159,6 +159,11 @@ class RenderedVideo:
     status: str
     error_message: Optional[str] = None
 
+    @property
+    def file_path(self) -> str:
+        """Alias for video_path."""
+        return self.video_path
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert dataclass to dictionary representation."""
         return asdict(self)

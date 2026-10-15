@@ -23,14 +23,11 @@ progress reporting for dashboard WebSocket/UI in Arabic, and dry-run execution.
 
 from __future__ import annotations
 
-import asyncio
 import fcntl
 import hashlib
-import json
 import logging
 import os
 import random
-import re
 import shutil
 import sqlite3
 import time
@@ -38,18 +35,17 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from src.config import current_config
 from src.database import (
     ContentIdea,
     ProductionJob,
     ScheduleSlot as DBScheduleSlot,
-    SystemLog,
     Video,
     get_db,
 )
-from src.notifications import NotificationManager, NotificationType
+from src.notifications import NotificationManager
 from src.quality import QualityChecker, QualityReport
 from src.quota_manager import QuotaManager
 from src.video.renderer import VideoRenderRequest, VideoRenderer
@@ -356,7 +352,7 @@ class ProductionPipeline:
             with get_db() as session:
                 idea = (
                     session.query(ContentIdea)
-                    .filter(ContentIdea.used == False)
+                    .filter(ContentIdea.used.is_(False))
                     .order_by(ContentIdea.score.desc())
                     .first()
                 )
@@ -684,7 +680,7 @@ class ProductionPipeline:
                     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
                     cursor.execute(
                         """
-                        UPDATE schedule_slots 
+                        UPDATE schedule_slots
                         SET status = ?, video_id = ?, updated_at = ?
                         WHERE id = ? OR slot_id = ?
                         """,
@@ -741,7 +737,7 @@ class ProductionPipeline:
         self._update_job_progress(job_id, "facts_verified", title, 35, "in_progress")
 
         # Step 5: Originality Check
-        orig_res = self._step_5_check_originality(script)
+        _orig_res = self._step_5_check_originality(script)
         self._update_job_progress(job_id, "originality_verified", title, 40, "in_progress")
 
         # Setup destination output paths

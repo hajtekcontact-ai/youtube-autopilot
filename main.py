@@ -17,9 +17,6 @@ import argparse
 import os
 import shutil
 import sys
-import time
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 from src.config import current_config
 from src.database import init_db
