@@ -737,7 +737,9 @@ class ProductionPipeline:
         self._update_job_progress(job_id, "facts_verified", title, 35, "in_progress")
 
         # Step 5: Originality Check
-        _orig_res = self._step_5_check_originality(script)
+        orig_res = self._step_5_check_originality(script)
+        if not orig_res.get("original", True):
+            logger.warning("Originality check flagged potential duplicate content: %s", orig_res)
         self._update_job_progress(job_id, "originality_verified", title, 40, "in_progress")
 
         # Setup destination output paths

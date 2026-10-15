@@ -338,6 +338,8 @@ def cmd_setup(args: argparse.Namespace) -> int:
     print("سيقوم هذا المعالج بتهيئة المجلدات وقاعدة البيانات والتحقق من الإعدادات الأساسية.\n")
 
     non_interactive = getattr(args, "non_interactive", False) or not sys.stdin.isatty()
+    if non_interactive:
+        print("[ℹ] جاري التشغيل في الوضع التلقائي غير التفاعلي (Non-interactive mode).")
 
     # Step 1: Directory initialization
     print("[1/4] جاري إنشاء المجلدات الأساسية للنظام...")
