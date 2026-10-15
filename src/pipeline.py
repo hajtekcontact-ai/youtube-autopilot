@@ -204,6 +204,8 @@ class ProductionPipeline:
 
     def __init__(self) -> None:
         """Initialize the pipeline with all subcomponents."""
+        from src.database import init_db
+        init_db()
         self.quality_checker = QualityChecker()
         self.quota_manager = QuotaManager()
         self.notification_manager = NotificationManager()

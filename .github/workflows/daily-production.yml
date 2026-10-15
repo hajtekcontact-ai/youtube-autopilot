@@ -72,6 +72,7 @@ jobs:
 
       - name: Run production pipeline
         run: |
+          python main.py init-db
           MODE=${{ github.event.inputs.mode || 'produce' }}
           python main.py $MODE
         env:

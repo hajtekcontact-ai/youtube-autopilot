@@ -453,6 +453,12 @@ def main() -> None:
         parser.print_help()
         sys.exit(1)
 
+    from src.database import init_db
+    try:
+        init_db()
+    except Exception as exc:
+        logger.warning("Database pre-initialization notice: %s", exc)
+
     exit_code = args.func(args)
     sys.exit(exit_code)
 
