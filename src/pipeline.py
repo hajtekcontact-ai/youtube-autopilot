@@ -381,6 +381,7 @@ class ProductionPipeline:
                     topic=selected["topic"],
                     title=selected["title"],
                     description=selected["hook"],
+                    hook=selected["hook"],
                     niche=niche,
                     source="ai_generator",
                     used=True,
@@ -410,14 +411,15 @@ class ProductionPipeline:
                 "If you love exploring the mysteries of science and tech, hit subscribe for daily revelations!",
             ]
         else:
-            # 500-800 words, ~3-5 minutes
+            # Substantive documentary script: 400-600 words, ~100-150 seconds
             script_paragraphs = [
-                f"{hook} Welcome back to the channel.",
-                f"Today, we are taking a deep dive into {topic}: {title}.",
-                f"Section 1: The Core Mechanism. To understand this breakthrough, we first need to examine the fundamental science. {facts[0]} This explains why previous attempts struggled for decades.",
-                f"Section 2: The Breakthrough Discovery. Recent experimental observations revealed something unexpected: {facts[1] if len(facts) > 1 else 'novel properties emerged under specific conditions.'} Researchers noticed a dramatic paradigm shift.",
-                f"Section 3: What This Means For The Future. As these technological applications scale, the real-world impact will redefine modern industry. {facts[2] if len(facts) > 2 else 'We are already seeing early commercial prototypes.'}",
-                "In conclusion, the frontier of science is moving faster than ever before. What do you think about this breakthrough? Let us know in the comments below, and don't forget to like and subscribe for more deep-dive analyses.",
+                f"{hook} Welcome back to our channel, where we explore the deepest questions in science, technology, and human ingenuity.",
+                f"Today, we are taking an extensive deep dive into {topic}: {title}. For decades, our understanding of this subject was limited by conventional models, but revolutionary breakthroughs are now rewriting the textbooks.",
+                f"Section 1: The Core Mechanism. To truly understand this phenomenon, we must first break down the underlying first principles. {facts[0]} When scientists first observed these anomalies, standard measurements failed to explain the data. It required a completely fresh mathematical framework to decode what was occurring beneath the surface.",
+                f"Section 2: The Revolutionary Discovery. Recent high-precision experimental tests revealed something truly unexpected: {facts[1] if len(facts) > 1 else 'novel physical properties emerged under extreme laboratory conditions.'} Researchers noticed a dramatic paradigm shift that invalidated decades of outdated assumptions.",
+                f"Section 3: Practical Applications and The Frontier. As this technology transitions from theory to real-world engineering, the implications for our future are staggering. {facts[2] if len(facts) > 2 else 'Prototypes are currently being developed across top research institutes worldwide.'} From energy systems to computing, the ripple effects will be felt across every corner of modern society.",
+                "Section 4: The Road Ahead. While significant hurdles remain before widespread adoption, the trajectory is unmistakable. We are standing on the precipice of a new era of technological capability that will shape the next fifty years.",
+                "In conclusion, the frontier of science is expanding faster than ever before. What do you think about this breakthrough? Could this change our world sooner than expected? Share your thoughts in the comments below, leave a like if you enjoyed this analysis, and subscribe with notifications on for daily explorations of the universe.",
             ]
 
         return "\n\n".join(script_paragraphs)
@@ -661,11 +663,12 @@ class ProductionPipeline:
         if not slot_id:
             return
 
+        vid_fk = video_id if (video_id and str(video_id).strip()) else None
         try:
             with get_db() as session:
                 db_slot = session.query(DBScheduleSlot).filter(DBScheduleSlot.id == str(slot_id)).first()
                 if db_slot:
-                    db_slot.video_id = video_id
+                    db_slot.video_id = vid_fk
                     db_slot.status = "published" if status == "completed" else status
                     session.commit()
         except Exception as exc:
@@ -678,13 +681,14 @@ class ProductionPipeline:
                 with sqlite3.connect(str(db_path), timeout=10.0) as conn:
                     cursor = conn.cursor()
                     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                    slot_status = "completed" if status == "completed" else status
                     cursor.execute(
                         """
                         UPDATE schedule_slots
                         SET status = ?, video_id = ?, updated_at = ?
                         WHERE id = ? OR slot_id = ?
                         """,
-                        ("completed", video_id, now_str, str(slot_id), str(slot_id)),
+                        (slot_status, vid_fk, now_str, str(slot_id), str(slot_id)),
                     )
                     conn.commit()
         except Exception:
@@ -881,7 +885,7 @@ class ProductionPipeline:
                         err_msg = f"Slot {slot.id} ({slot.slot_time}) failed: {exc}"
                         logger.error(err_msg, exc_info=True)
                         errors.append(err_msg)
-                        self._step_15_update_schedule_slot(slot, "", status="failed")
+                        self._step_15_update_schedule_slot(slot, None, status="failed")
 
                 elapsed = round(time.time() - start_time, 2)
                 quota_summary = self.quota_manager.get_daily_usage("youtube")

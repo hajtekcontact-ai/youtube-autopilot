@@ -169,6 +169,7 @@ class ContentIdea(Base):
     used = Column(Boolean, nullable=False, default=False, index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     score = Column(Float, nullable=False, default=0.0, index=True)
+    hook = Column(Text, nullable=False, default="")
     metadata_json = Column("metadata_json", Text, nullable=False, default="{}")
 
     @property

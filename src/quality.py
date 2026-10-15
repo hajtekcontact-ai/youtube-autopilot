@@ -64,7 +64,7 @@ class QualityChecker:
     # Duration limits in seconds (min, max)
     DURATION_LIMITS = {
         "short": (15.0, 60.0),
-        "long": (120.0, 900.0),  # 2 min to 15 min
+        "long": (60.0, 900.0),  # 1 min to 15 min
     }
 
     # Maximum file size in bytes

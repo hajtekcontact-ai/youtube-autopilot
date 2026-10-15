@@ -242,13 +242,13 @@ class YouTubeAuth:
         return conn
 
     def _init_db(self) -> None:
-        """Initialize the secure_tokens table in SQLite if it does not already exist."""
+        """Initialize the youtube_oauth_tokens table in SQLite if it does not already exist."""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                    CREATE TABLE IF NOT EXISTS secure_tokens (
+                    CREATE TABLE IF NOT EXISTS youtube_oauth_tokens (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL UNIQUE,
                         access_token_enc TEXT NOT NULL,
@@ -267,7 +267,7 @@ class YouTubeAuth:
                 )
                 conn.commit()
         except Exception as e:
-            logger.error("Failed to initialize database table secure_tokens: %s", e)
+            logger.error("Failed to initialize database table youtube_oauth_tokens: %s", e)
             self._set_error("Database initialization error", ARABIC_MESSAGES["db_error"])
 
     def _save_token(
@@ -297,21 +297,21 @@ class YouTubeAuth:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                    INSERT INTO secure_tokens (
+                    INSERT INTO youtube_oauth_tokens (
                         service_name, access_token_enc, refresh_token_enc, token_uri_enc,
                         client_id_enc, client_secret_enc, scopes, expiry, channel_id, channel_title,
                         created_at, updated_at
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(service_name) DO UPDATE SET
                         access_token_enc=excluded.access_token_enc,
-                        refresh_token_enc=COALESCE(excluded.refresh_token_enc, secure_tokens.refresh_token_enc),
+                        refresh_token_enc=COALESCE(excluded.refresh_token_enc, youtube_oauth_tokens.refresh_token_enc),
                         token_uri_enc=excluded.token_uri_enc,
                         client_id_enc=excluded.client_id_enc,
                         client_secret_enc=excluded.client_secret_enc,
                         scopes=excluded.scopes,
                         expiry=excluded.expiry,
-                        channel_id=COALESCE(excluded.channel_id, secure_tokens.channel_id),
-                        channel_title=COALESCE(excluded.channel_title, secure_tokens.channel_title),
+                        channel_id=COALESCE(excluded.channel_id, youtube_oauth_tokens.channel_id),
+                        channel_title=COALESCE(excluded.channel_title, youtube_oauth_tokens.channel_title),
                         updated_at=excluded.updated_at
                     """,
                     (
@@ -347,7 +347,7 @@ class YouTubeAuth:
                     SELECT service_name, access_token_enc, refresh_token_enc, token_uri_enc,
                            client_id_enc, client_secret_enc, scopes, expiry,
                            channel_id, channel_title, created_at, updated_at
-                    FROM secure_tokens
+                    FROM youtube_oauth_tokens
                     WHERE service_name = ?
                     """,
                     (self.SERVICE_NAME,),
@@ -394,7 +394,7 @@ class YouTubeAuth:
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute("DELETE FROM secure_tokens WHERE service_name = ?", (self.SERVICE_NAME,))
+                cursor.execute("DELETE FROM youtube_oauth_tokens WHERE service_name = ?", (self.SERVICE_NAME,))
                 conn.commit()
             return True
         except Exception as e:
