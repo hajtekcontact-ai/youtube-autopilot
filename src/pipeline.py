@@ -613,8 +613,10 @@ class ProductionPipeline:
                 vid.updated_at = datetime.utcnow()
 
             session.commit()
-            session.refresh(vid)
-            session.expunge(vid)
+            try:
+                session.expunge(vid)
+            except Exception:
+                pass
             return vid
 
     def _step_14_upload_to_youtube(

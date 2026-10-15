@@ -23,6 +23,11 @@ def setup_test_env():
     """Set up test environment before each test."""
     os.environ['APP_ENV'] = 'test'
     os.environ['DATABASE_URL'] = 'sqlite:///test_autopilot.db'
+    from src.database import init_db
+    try:
+        init_db()
+    except Exception:
+        pass
     yield
     # Cleanup test database
     if os.path.exists('test_autopilot.db'):
