@@ -264,6 +264,28 @@ class AnalyticsCollector:
                 );
                 """
             )
+            # Ensure schema migration if table pre-existed from another model
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(analytics_snapshots);")
+            existing_cols = {row[1] for row in cursor.fetchall()}
+            needed_cols = [
+                ("youtube_video_id", "TEXT NOT NULL DEFAULT ''"),
+                ("window", "TEXT NOT NULL DEFAULT '48h'"),
+                ("estimated_minutes_watched", "REAL NOT NULL DEFAULT 0.0"),
+                ("subscribers_lost", "INTEGER NOT NULL DEFAULT 0"),
+                ("likes", "INTEGER NOT NULL DEFAULT 0"),
+                ("dislikes", "INTEGER NOT NULL DEFAULT 0"),
+                ("shares", "INTEGER NOT NULL DEFAULT 0"),
+                ("comments", "INTEGER NOT NULL DEFAULT 0"),
+                ("impression_ctr", "REAL NOT NULL DEFAULT 0.0"),
+                ("annotation_ctr", "REAL NOT NULL DEFAULT 0.0"),
+                ("raw_data", "TEXT"),
+                ("source", "TEXT NOT NULL DEFAULT 'api'"),
+            ]
+            for col_name, col_type in needed_cols:
+                if col_name not in existing_cols:
+                    conn.execute(f"ALTER TABLE analytics_snapshots ADD COLUMN {col_name} {col_type};")
+
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS analytics_collection_logs (
